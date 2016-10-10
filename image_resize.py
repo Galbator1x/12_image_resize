@@ -56,7 +56,6 @@ def is_proportions_match(path_to_original, image):
     permissible_error = 0.005
     img_original = Image.open(path_to_original)
     proportions = image.width / img_original.width - image.height / img_original.height
-    print(proportions)
     return abs(proportions) < permissible_error
 
 
