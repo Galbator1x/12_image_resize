@@ -9,8 +9,18 @@ Usage
 
 ```
 ~$ pip install -r requirements.txt
-~$ python3 image_resize.py [-h] [--width WIDTH] [--height HEIGHT] 
+~$ python3 image_resize.py -h
+usage: image_resize.py [-h] [--width WIDTH] [--height HEIGHT] 
 [--scale SCALE] [--output OUTPUT] path
+positional arguments:
+  path             path to the image
+
+optional arguments:
+  -h, --help       show this help message and exit
+  --width WIDTH
+  --height HEIGHT
+  --scale SCALE
+  --output OUTPUT
 ~$ python3 image_resize.py cat.png --scale 2
 ```
 
