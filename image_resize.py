@@ -26,53 +26,60 @@ def get_args():
     return parser.parse_args()
 
 
-def resize_image(path, **kwargs):
-    img = Image.open(path)
-
-    scale = kwargs['scale']
-    if scale is not None:
-        size = int(img.width * scale), int(img.height * scale)
-        return img.resize(size, Image.ANTIALIAS)
-
-    width, height = kwargs['width'], kwargs['height']
-    if height is None:
-        scale = width / img.width
-        size = width, int(img.height * scale)
-        return img.resize(size, Image.ANTIALIAS)
-
-    if width is None:
-        scale = height / img.height
-        size = int(img.width * scale), height
-        return img.resize(size, Image.ANTIALIAS)
-
-    return img.resize((width, height), Image.ANTIALIAS)
+def open_image(path):
+    return Image.open(path)
 
 
 def save_image(image, path_to_result):
     image.save(path_to_result)
 
 
-def is_proportions_match(path_to_original, image):
+def get_new_image_size(width, height, scale):
+    if scale is not None:
+        return int(image.width * scale), int(image.height * scale)
+
+    if height is None:
+        scale = width / image.width
+        return width, int(image.height * scale)
+
+    if width is None:
+        scale = height / image.height
+        return int(image.width * scale), height
+
+
+def resize_image(image, width=None, height=None, scale=None):
+    size = get_new_image_size(width, height, scale)
+    return image.resize(size, Image.ANTIALIAS)
+
+
+def is_proportions_match(image, width, height, scale):
     permissible_error = 0.005
-    img_original = Image.open(path_to_original)
-    proportions = image.width / img_original.width - image.height / img_original.height
+    new_width, new_height = get_new_image_size(width, height, scale)
+    proportions = new_width / image.width - new_height / image.height
     return abs(proportions) < permissible_error
+
+
+def parse_output_path_for_new_image(output_path, path_to_image, image):
+    if output_path is not None:
+        return output_path
+    else:
+        filename, file_ext = os.path.splitext(os.path.basename(path_to_image))
+        return '{}__{}x{}{}'.format(filename,
+                                    image.width,
+                                    image.height,
+                                    file_ext)
 
 
 if __name__ == '__main__':
     args = get_args()
     exit_if_errors(args)
-    image = resize_image(args.path, scale=args.scale,
-                         width=args.width, height=args.height)
-
-    if args.output is not None:
-        path_to_result = args.output
-    else:
-        path = os.path.splitext(os.path.basename(args.path))
-        path_to_result = '{}__{}x{}{}'.format(path[0],
-                                              str(image.width),
-                                              str(image.height),
-                                              path[1])
-    save_image(image, path_to_result)
-    if not is_proportions_match(args.path, image):
+    image = open_image(args.path)
+    if not is_proportions_match(image, scale=args.scale,
+                                width=args.width, height=args.height):
         print('The proportions are not same as the original file.')
+
+    new_image = resize_image(image, scale=args.scale,
+                             width=args.width, height=args.height)
+
+    path_to_result = parse_output_path_for_new_image(args.output, args.path, new_image)
+    save_image(new_image, path_to_result)
