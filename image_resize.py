@@ -8,7 +8,7 @@ def exit_if_errors(args):
     if args.scale is not None and (args.width is not None or args.height is not None):
         print('You can not specify both the width, height and scale.')
         exit(1)
-    if args.scale is not None and args.width is not None and args.height is not None:
+    if args.scale is None and args.width is None and args.height is None:
         print('You must specify the size of the output image.')
         exit(1)
     if not os.path.exists(args.path):
@@ -48,6 +48,11 @@ def get_new_image_size(width, height, scale):
 
 
 def resize_image(image, width=None, height=None, scale=None):
+    if scale is not None and (width is not None or height is not None):
+        raise ValueError('You can not specify both the width, height and scale.')
+    if scale is None and width is None and height is None:
+        raise ValueError('You must specify the size of the output image.')
+    
     size = get_new_image_size(width, height, scale)
     return image.resize(size, Image.ANTIALIAS)
 
@@ -73,13 +78,19 @@ def parse_output_path_for_new_image(output_path, path_to_image, image):
 if __name__ == '__main__':
     args = get_args()
     exit_if_errors(args)
+    if not os.path.exists(args.path):
+        print('Image does not exists.')
+        exit(1)
     image = open_image(args.path)
     if not is_proportions_match(image, scale=args.scale,
                                 width=args.width, height=args.height):
         print('The proportions are not same as the original file.')
-
-    new_image = resize_image(image, scale=args.scale,
-                             width=args.width, height=args.height)
+    try:
+        new_image = resize_image(image, scale=args.scale,
+                                 width=args.width, height=args.height)
+    except ValueError as err:
+        print(str(err))
+        exit(1)
 
     path_to_result = parse_output_path_for_new_image(args.output, args.path, new_image)
     save_image(new_image, path_to_result)
