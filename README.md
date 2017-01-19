@@ -28,4 +28,3 @@ Requirements
 ------------
 
 - Python >= 3.5
-- Pillow==3.3.0
